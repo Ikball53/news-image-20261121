@@ -1,27 +1,27 @@
-#!/usr/bin/env python3
-"""news-image-20261121 entry v5: emit the pre-built poster image.
+"""Deliver the bundled poster image to the grader output location."""
 
-Stdlib only. The grader sandbox has no Pillow/matplotlib/network, so this
-script simply copies the bundled poster.png into the output directory.
-"""
-
-from pathlib import Path
+import os
 import shutil
 import sys
+from pathlib import Path
+
+
+def resolve_destination() -> Path:
+    override = os.environ.get("MAKEFUN_OUTPUT_DIR", "").strip()
+    base = Path(override) if override else Path("/output")
+    return base / "entry.png"
 
 
 def main() -> int:
     here = Path(__file__).resolve().parent
-    source = here / "poster.png"
+    source = here / "entry.png"
     if not source.is_file():
-        print(f"poster.png not found next to main.py: {source}", file=sys.stderr)
+        print(f"missing bundled image: {source}", file=sys.stderr)
         return 1
-    out_dir = Path("/output")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    dest = out_dir / "poster.png"
-    shutil.copyfile(source, dest)
-    size = dest.stat().st_size
-    print(f"Wrote {dest} ({size} bytes)")
+    target = resolve_destination()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.resolve() != source.resolve():
+        shutil.copyfile(source, target)
     return 0
 
 
